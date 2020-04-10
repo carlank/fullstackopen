@@ -30,7 +30,7 @@ const App = () => {
 
     return (
 	    <div>
-	      <Header title={course.name} />
+	      <Header title={course.name}/>
 	      <Content parts={course.parts}/>
 	      <Total parts={course.parts}/>
 		</div>
