@@ -1,0 +1,21 @@
+title New Note SPA
+
+participant browser
+note over server:
+all requests are to base domain:
+https://fullstack-exampleapp.herokuapp.com
+end note
+
+note over browser:
+user fills out note input element
+and clicks submit button.
+end note
+note over browser:
+onsubmit event handler creates note+timestamp object,
+appends it to client-side notes variable,
+clears form,
+rerenders .notes element
+end note
+
+browser->server: HTTP POST /new_note_spa
+server-->browser: 201 Response application/json = {"message": "note created"}
