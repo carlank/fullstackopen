@@ -4,9 +4,9 @@ import ReactDOM from 'react-dom'
 const App = (props) => {
   const [selected, setSelected] = useState(0)
   const [votes, setVotes] = useState(Array.from({length: props.anecdotes.length}).fill(0));
-  
+
   const maxVotes = Math.max(...Object.values(votes));
-  const maxVotesIndex = Object.entries(votes).filter(([index,val])=>val==maxVotes)[0][0]; // hax. This pulls the first one, almost certainly, but Object.entries doesn't guarantee that it's ordered
+  const maxVotesIndex = Object.entries(votes).filter(([index,val])=>val===maxVotes)[0][0]; // hax. This pulls the first one, almost certainly, but Object.entries doesn't guarantee that it's ordered
 
 
   return (
