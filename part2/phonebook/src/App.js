@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Search = ({ query, handleQueryChange }) => <div>Search: <input value={query} onChange={handleQueryChange}/></div>;
 
@@ -16,20 +17,23 @@ const PersonForm = ({ handleSubmit, newName, newNumber, handleNewNameChange, han
       </form>
 );
 
-const People = ({ people }) => <div>{people.map(person => <Person person={person}/>)}</div>;
+const People = ({ people }) => <div>{people.map(person => <Person key={person.id} person={person}/>)}</div>;
 
 const Person = ({ person }) => <p key={person.name}>{person.name} {person.number}</p>;
 
 const App = () => {
-    const [persons, setPersons] = useState([
-        { name: 'Arto Hellas', number: '040-123456' },
-        { name: 'Ada Lovelace', number: '39-44-5323523' },
-        { name: 'Dan Abramov', number: '12-43-234345' },
-        { name: 'Mary Poppendieck', number: '39-23-6423122' }
-    ]);
+    const [persons, setPersons] = useState([]);
     const [query, setQuery] = useState('');
     const [newName, setNewName] = useState('');
     const [newNumber, setNewNumber] = useState('');
+
+    useEffect(() => {
+      axios
+        .get(`http://localhost:3001/persons`)
+        .then(res => {
+          setPersons(res.data);
+        })
+    }, []);
 
     const visiblePeople = query !== '' ? persons.filter(p => RegExp(query, 'i').test(p.name)) : persons;
 
