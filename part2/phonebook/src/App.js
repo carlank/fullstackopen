@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import phonebookService from './services/phonebook.js';
+import './index.css';
+
+const Notification = ({message, type="notification"}) => message === null ? null : <div className={type}>{message}</div>
 
 const Search = ({ query, handleQueryChange }) => <div>Search: <input value={query} onChange={handleQueryChange}/></div>;
 
@@ -26,6 +29,8 @@ const App = () => {
     const [query, setQuery] = useState('');
     const [newName, setNewName] = useState('');
     const [newNumber, setNewNumber] = useState('');
+    const [notificationMessage, setNotificationMessage] = useState(null);
+    const [notificationType, setNotificationType] = useState('notification');
 
     useEffect(() => {
         phonebookService
@@ -37,15 +42,23 @@ const App = () => {
 
     const visiblePeople = (query !== '' ? persons.filter(p => RegExp(query, 'i').test(p.name)) : persons).slice().sort((a,b)=>a.name > b.name ? 1 : -1);
 
+    const notify = (message, type='notification') => {
+      setNotificationMessage(message);
+      setNotificationType(type);
+      setTimeout(() => {
+        setNotificationMessage(null);
+      }, 3000);
+    }
+
     const addPerson = event => {
         const newPersonData = { name: newName, number: newNumber };
         event.preventDefault();
         if (newName === '') {
-            alert('Cannot enter a person without a name!');
+            notify('Cannot add a person without a name!', 'error');
             return false;
         }
         if (!/^[\d-+. ]*$/.test(newNumber)) { // Obviously, in production use a real validation technique
-            alert('Phone number may only contain digits, +, -, or spaces!');
+            notify('Phone number may only contain digits, +, -, or spaces!', 'error');
             return false;
         }
         if (persons.some(e => e.name === newName)) {
@@ -53,10 +66,12 @@ const App = () => {
                 phonebookService
                     .update(persons.filter(p=>p.name === newName)[0].id, newPersonData)
                     .then(data => {
+                    notify(`${data.name} has been updated!`);
                         setPersons([...persons.filter(person => data.name !== person.name), data]);
                         setNewName('');
                         setNewNumber('');
-                    });
+                    })
+                    .catch(err => notify(`${newName} could not be updated; out of sync with server?`));
                 return true;
             }
             return false;
@@ -66,6 +81,7 @@ const App = () => {
         phonebookService
             .create(newPersonData)
             .then(data => {
+              notify(`${data.name} has been created!`);
                 setPersons([...persons, data]);
                 setNewName('');
                 setNewNumber('');
@@ -85,6 +101,7 @@ const App = () => {
 
     return (
         <div>
+        <Notification message={notificationMessage} type={notificationType}/>
         <h2>Phonebook</h2>
         <Search query={query} handleQueryChange={e=>setQuery(e.target.value)}/>
         <br/>
