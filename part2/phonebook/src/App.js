@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import phonebookService from './services/phonebook.js';
 
 const Search = ({ query, handleQueryChange }) => <div>Search: <input value={query} onChange={handleQueryChange}/></div>;
 
@@ -17,9 +17,9 @@ const PersonForm = ({ handleSubmit, newName, newNumber, handleNewNameChange, han
       </form>
 );
 
-const People = ({ people }) => <div>{people.map(person => <Person key={person.id} person={person}/>)}</div>;
+const People = ({ people, handleRemove }) => <div>{people.map(person => <Person key={person.id} person={person} handleRemove={handleRemove(person.id)}/>)}</div>;
 
-const Person = ({ person }) => <p key={person.name}>{person.name} {person.number}</p>;
+const Person = ({ person, handleRemove }) => <p key={person.name}>{person.name} {person.number} <button onClick={handleRemove}>Delete</button></p>;
 
 const App = () => {
     const [persons, setPersons] = useState([]);
@@ -28,16 +28,17 @@ const App = () => {
     const [newNumber, setNewNumber] = useState('');
 
     useEffect(() => {
-      axios
-        .get(`http://localhost:3001/persons`)
-        .then(res => {
-          setPersons(res.data);
-        })
+        phonebookService
+            .getAll()
+            .then(data => {
+                setPersons(data);
+            })
     }, []);
 
-    const visiblePeople = query !== '' ? persons.filter(p => RegExp(query, 'i').test(p.name)) : persons;
+    const visiblePeople = (query !== '' ? persons.filter(p => RegExp(query, 'i').test(p.name)) : persons).slice().sort((a,b)=>a.name > b.name ? 1 : -1);
 
-    const addPerson = (event) => {
+    const addPerson = event => {
+        const newPersonData = { name: newName, number: newNumber };
         event.preventDefault();
         if (newName === '') {
             alert('Cannot enter a person without a name!');
@@ -48,16 +49,42 @@ const App = () => {
             return false;
         }
         if (persons.some(e => e.name === newName)) {
-            alert(`${newName} is already in the phonebook!`);
+            if (window.confirm(`Overwrite the entry for ${newName}?`)) {
+                phonebookService
+                    .update(persons.filter(p=>p.name === newName)[0].id, newPersonData)
+                    .then(data => {
+                        setPersons([...persons.filter(person => data.name !== person.name), data]);
+                        setNewName('');
+                        setNewNumber('');
+                    });
+                return true;
+            }
             return false;
         }
-        setPersons([...persons, { name: newName, number: newNumber }]);
-        setNewName('');
-        setNewNumber('');
+
+
+        phonebookService
+            .create(newPersonData)
+            .then(data => {
+                setPersons([...persons, data]);
+                setNewName('');
+                setNewNumber('');
+            });
+    };
+
+    const removePerson = id => event => {
+        event.preventDefault();
+        if (window.confirm('Are you sure you want to delete this entry?')) {
+            phonebookService
+                .remove(id)
+                .then(_ => {
+                    setPersons(persons.filter(person => person.id !== id));
+                });
+        }
     };
 
     return (
-      <div>
+        <div>
         <h2>Phonebook</h2>
         <Search query={query} handleQueryChange={e=>setQuery(e.target.value)}/>
         <br/>
@@ -69,7 +96,7 @@ const App = () => {
           handleNewNumberChange={e=>setNewNumber(e.target.value)}
         />
         <h2>Numbers</h2>
-        <People people={visiblePeople}/>
+        <People people={visiblePeople} handleRemove={removePerson}/>
       </div>
     );
 }
