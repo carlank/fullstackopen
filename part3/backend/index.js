@@ -14,7 +14,7 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 app.get('/info', (req, res) => {
     Person.find({}).then(persons => {
-    res.send(`<p>The phonebook has ${persons.length} entries.</p><p>${new Date()}</p>`);
+        res.send(`<p>The phonebook has ${persons.length} entries.</p><p>${new Date()}</p>`);
     })
 });
 
@@ -45,7 +45,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
 });
 
 app.post('/api/persons', (req, res, next) => {
-    const {name, number} = req.body;
+    const { name, number } = req.body;
     if (!name || !number) {
         return res.status(400).json({
             error: 'entry must have a name and number'
@@ -58,13 +58,13 @@ app.post('/api/persons', (req, res, next) => {
 });
 
 app.put('/api/persons/:id', (req, res, next) => {
-    const {name, number} = req.body;
+    const { name, number } = req.body;
     if (!name || !number) {
         return res.status(400).json({
             error: 'entry must have a name and number'
         });
     }
-    Person.findByIdAndUpdate(req.params.id, {name, number}, {new: true})
+    Person.findByIdAndUpdate(req.params.id, { name, number }, { new: true })
         .then(updatedPerson => {
             res.json(updatedPerson.toJSON());
         })
@@ -72,13 +72,15 @@ app.put('/api/persons/:id', (req, res, next) => {
 })
 
 const errorHandler = (error, request, response, next) => {
-  console.error(error.message);
+    console.error(error.message);
 
-  if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' });
-  } 
+    if (error.name === 'CastError' && error.kind === 'ObjectId') {
+        return response.status(400).send({ error: 'malformatted id' });
+    } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
 
-  next(error);
+    next(error);
 }
 
 app.use(errorHandler)

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import phonebookService from './services/phonebook.js';
 import './index.css';
 
-const Notification = ({message, type="notification"}) => message === null ? null : <div className={type}>{message}</div>
+const Notification = ({ message, type = "notification" }) => message === null ? null : <div className={type}>{message}</div>
 
 const Search = ({ query, handleQueryChange }) => <div>Search: <input value={query} onChange={handleQueryChange}/></div>;
 
@@ -40,14 +40,14 @@ const App = () => {
             })
     }, []);
 
-    const visiblePeople = (query !== '' ? persons.filter(p => RegExp(query, 'i').test(p.name)) : persons).slice().sort((a,b)=>a.name > b.name ? 1 : -1);
+    const visiblePeople = (query !== '' ? persons.filter(p => RegExp(query, 'i').test(p.name)) : persons).slice().sort((a, b) => a.name > b.name ? 1 : -1);
 
-    const notify = (message, type='notification') => {
-      setNotificationMessage(message);
-      setNotificationType(type);
-      setTimeout(() => {
-        setNotificationMessage(null);
-      }, 3000);
+    const notify = (message, type = 'notification') => {
+        setNotificationMessage(message);
+        setNotificationType(type);
+        setTimeout(() => {
+            setNotificationMessage(null);
+        }, 3000);
     }
 
     const addPerson = event => {
@@ -64,9 +64,9 @@ const App = () => {
         if (persons.some(e => e.name === newName)) {
             if (window.confirm(`Overwrite the entry for ${newName}?`)) {
                 phonebookService
-                    .update(persons.filter(p=>p.name === newName)[0].id, newPersonData)
+                    .update(persons.filter(p => p.name === newName)[0].id, newPersonData)
                     .then(data => {
-                    notify(`${data.name} has been updated!`);
+                        notify(`${data.name} has been updated!`);
                         setPersons([...persons.filter(person => data.name !== person.name), data]);
                         setNewName('');
                         setNewNumber('');
@@ -81,10 +81,14 @@ const App = () => {
         phonebookService
             .create(newPersonData)
             .then(data => {
-              notify(`${data.name} has been created!`);
+                notify(`${data.name} has been created!`);
                 setPersons([...persons, data]);
                 setNewName('');
                 setNewNumber('');
+            })
+            .catch(err => {
+                console.log(err.response.data.error);
+                notify(err.response.data.error, 'error');
             });
     };
 
