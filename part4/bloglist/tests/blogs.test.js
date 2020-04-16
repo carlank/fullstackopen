@@ -3,24 +3,14 @@ const mongoose = require('mongoose');
 const app = require('../app.js');
 const api = supertest(app);
 
-const Blog = require('../models/blog.js');
+const helper = require('./test_helper.js');
 
-const initialBlogs = [{
-    author: 'Franklin Roosevelt',
-    title: 'Why Tomatoes Are Vegetables',
-  },
-  {
-    author: 'Kevin Kowalski',
-    title: 'Tomatoes Are The Best Fruit',
-  },
-];
+const Blog = require('../models/blog.js');
 
 beforeEach(async () => {
   await Blog.deleteMany({});
 
-  initialBlogs.forEach(async (blog) => {
-    await new Blog(blog).save();
-  });
+  await Promise.all(helper.initialBlogs.map(blog=> (new Blog(blog)).save()));
 });
 
 test('blogs are returned as json', async () => {
@@ -32,7 +22,7 @@ test('blogs are returned as json', async () => {
 
 test('there are two blogs', async () => {
   const res = await api.get('/api/blogs');
-  expect(res.body).toHaveLength(initialBlogs.length);
+  expect(res.body).toHaveLength(helper.initialBlogs.length);
 });
 
 test('a specific Blog exists within the response', async () => {
@@ -57,7 +47,7 @@ test('POST \'/api/blogs\' with valid Blog creates new Blog entry', async () => {
     .expect('Content-Type', /application\/json/);
 
   const updatedBlogs = await api.get('/api/blogs');
-  expect(updatedBlogs.body).toHaveLength(initialBlogs.length + 1);
+  expect(updatedBlogs.body).toHaveLength(helper.initialBlogs.length + 1);
 });
 
 test('Blog objects have 0 likes if undefined', async () => {
