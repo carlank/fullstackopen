@@ -60,18 +60,30 @@ test('POST \'/api/blogs\' with valid Blog creates new Blog entry', async () => {
   expect(updatedBlogs.body).toHaveLength(initialBlogs.length + 1);
 });
 
-// test('Blog objects have 0 likes if undefined', async () => {
-//   const newBlog = {
-//     author: 'Frankie Frankson',
-//     title: 'Eponymous Surnames of the World'
-//   };
-//   const savedBlog = await api
-//     .post('/api/blogs')
-//     .send(newBlog);
+test('Blog objects have 0 likes if undefined', async () => {
+  const newBlog = {
+    author: 'Frankie Frankson',
+    title: 'Eponymous Surnames of the World'
+  };
+  const savedBlog = await api
+    .post('/api/blogs')
+    .send(newBlog);
 
-//   expect(savedBlog.body
+  expect(savedBlog.body.likes).toBe(0);
 
-// });
+});
+
+test('POST \'/api/blogs\' with Blog missing title and url returns 400', async () => {
+  const newBlog = {
+    author: 'pertrovich',
+    likeS: 9001
+  };
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(400);
+})
 
 afterAll(() => {
   mongoose.connection.close();
