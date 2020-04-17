@@ -13,7 +13,7 @@ const App = () => {
 
   return (
     <div>
-      <h2>Blogs Registry</h2>
+      <h1>Blogs Registry</h1>
       {blogs.map(blog =>
         <Blog key={blog.id} blog={blog} />
       )}
