@@ -1,24 +1,34 @@
 const logger = require('./logger');
 
-const requestLogger = (request, response, next) => {
-  logger.log('Method:', request.method);
-  logger.log('Path:  ', request.path);
-  logger.log('Body:  ', request.body);
+const requestLogger = (req, res, next) => {
+  logger.log('Method:', req.method);
+  logger.log('Path:  ', req.path);
+  logger.log('Body:  ', req.body);
   logger.log('---');
   next();
 };
 
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: 'unknown endpoint' });
+const unknownEndpoint = (req, res) => {
+  res.status(404).send({ error: 'unknown endpoint' });
 };
 
-const errorHandler = (error, request, response, next) => {
+const tokenExtractor = (req, res, next) => {
+  const auth = req.get('authorization');
+  if (auth && auth.toLowerCase().startsWith('bearer ')) {
+    req.token = auth.substring(7);
+  }
+  next();
+};
+
+const errorHandler = (error, req, res, next) => {
   logger.error(error.message);
 
   if (error.name === 'CastError' && error.kind === 'ObjectId') {
-    return response.status(400).send({ error: 'malformatted id' });
+    return res.status(400).send({ error: 'malformatted id' });
   } else if (error.name === 'ValidationError') {
-    return response.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
+  } else if (error.name === 'JsonWebTokenError') {
+    return res.status(401).json({error: 'invalid token' });
   }
 
   next(error);
@@ -27,5 +37,6 @@ const errorHandler = (error, request, response, next) => {
 module.exports = {
   requestLogger,
   unknownEndpoint,
+  tokenExtractor,
   errorHandler
 };
