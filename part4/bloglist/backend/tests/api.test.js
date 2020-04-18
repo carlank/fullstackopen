@@ -9,6 +9,10 @@ const Blog = require('../models/blog.js');
 const User = require('../models/user.js');
 
 describe('initial state: multiple blogs & multiple users', () => {
+  beforeAll(async () => {
+
+  });
+
   beforeEach(async () => {
     await User.deleteMany({});
     await Blog.deleteMany({});
@@ -48,7 +52,7 @@ describe('initial state: multiple blogs & multiple users', () => {
         token = (await api.post('/login').send({ username: 'root', password: 'thefallofseveneves' })).body.token;
       });
 
-      test('PORT \'/api/blogs\' without token returns 401', async () => {
+      test('PORT \'/api/blogs\' without valid token returns 401', async () => {
         const newBlog = {
           author: 'Frankie Frankson',
           title: 'Eponymous Surnames of the World'
@@ -173,6 +177,10 @@ describe('initial state: multiple blogs & multiple users', () => {
         .expect(400);
     });
 
+  });
+
+  afterAll(async ()=>{
+    await Promise.all(mongoose.connections.map(con => con.close()))
   });
 
 });
